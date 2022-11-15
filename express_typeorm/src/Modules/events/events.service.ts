@@ -1,7 +1,6 @@
-import { Repository } from 'typeorm';
-import { Event } from './entities/event.entity';
+import { Repository } from "typeorm";
+import { Event } from "./entities/event.entity";
 import App from "../../app";
-
 
 export class EventsService {
   private eventRepository: Repository<Event>;
@@ -92,7 +91,17 @@ export class EventsService {
      */
 
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    try {
+      const eventsWithWorkshops = await this.eventRepository.find({
+        select: ["id", "createdAt", "name", "workshops"],
+        relations: {
+          workshops: true,
+        },
+      });
+      return eventsWithWorkshops;
+    } catch (err) {
+      throw new Error(`task 1 error ${err}`);
+    }
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
@@ -162,6 +171,24 @@ export class EventsService {
     ```
      */
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    try {
+      const eventsWithWorkshops = await this.eventRepository.find({
+        select: ["id", "createdAt", "name", "workshops"],
+        relations: {
+          workshops: true,
+        },
+        order: {
+          workshops: {
+            start: "ASC",
+          },
+        },
+        // where: {
+        //   workshops:
+        // },
+      });
+      return eventsWithWorkshops;
+    } catch (err) {
+      throw new Error(`task 2 error ${err}`);
+    }
   }
 }
