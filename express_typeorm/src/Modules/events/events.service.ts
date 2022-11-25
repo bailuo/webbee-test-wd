@@ -1,10 +1,10 @@
-import { Repository } from "typeorm";
+import { Repository, MoreThan } from "typeorm";
 import { Event } from "./entities/event.entity";
 import App from "../../app";
+import { Workshop } from "./entities/workshop.entity";
 
 export class EventsService {
   private eventRepository: Repository<Event>;
-
   constructor(app: App) {
     this.eventRepository = app.getDataSource().getRepository(Event);
   }
@@ -97,6 +97,12 @@ export class EventsService {
         relations: {
           workshops: true,
         },
+        order: {
+          id: "ASC",
+          workshops: {
+            id: "ASC",
+          },
+        },
       });
       return eventsWithWorkshops;
     } catch (err) {
@@ -172,21 +178,21 @@ export class EventsService {
      */
   async getFutureEventWithWorkshops() {
     try {
-      const eventsWithWorkshops = await this.eventRepository.find({
-        select: ["id", "createdAt", "name", "workshops"],
-        relations: {
-          workshops: true,
-        },
-        order: {
-          workshops: {
-            start: "ASC",
-          },
-        },
-        // where: {
-        //   workshops:
-        // },
-      });
-      return eventsWithWorkshops;
+      const results = await this.eventRepository
+        .createQueryBuilder("event")
+        .leftJoinAndSelect("event.workshops", "workshops")
+        .where((qb) => {
+          const subquery = qb
+            .subQuery()
+            .select("ws.eventId")
+            .from(Workshop, "ws")
+            .having(`MIN(ws.start) > "${new Date().toISOString()}"`)
+            .groupBy("ws.eventId")
+            .getQuery();
+          return "event.id IN" + subquery;
+        })
+        .getMany();
+      return results;
     } catch (err) {
       throw new Error(`task 2 error ${err}`);
     }

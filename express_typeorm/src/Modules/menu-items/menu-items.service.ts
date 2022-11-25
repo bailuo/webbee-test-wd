@@ -1,13 +1,16 @@
-import { MenuItem } from './entities/menu-item.entity';
-import { Repository } from "typeorm";
+import { MenuItem } from "./entities/menu-item.entity";
+import { Repository, TreeRepository } from "typeorm";
 import App from "../../app";
 
 export class MenuItemsService {
-
   private menuItemRepository: Repository<MenuItem>;
+  private menuItemTreeRepository: TreeRepository<MenuItem>;
 
   constructor(app: App) {
     this.menuItemRepository = app.getDataSource().getRepository(MenuItem);
+    this.menuItemTreeRepository = app
+      .getDataSource()
+      .getTreeRepository(MenuItem);
   }
 
   /* TODO: complete getMenuItems so that it returns a nested menu structure
@@ -86,6 +89,12 @@ export class MenuItemsService {
   */
 
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    try {
+      const menuItemTree = await this.menuItemTreeRepository.findTrees();
+      console.log(menuItemTree);
+      return menuItemTree;
+    } catch (err) {
+      throw new Error(`TODO in task 3, ${err}`);
+    }
   }
 }
